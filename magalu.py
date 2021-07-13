@@ -28,9 +28,7 @@ driver.get("https://www.magazineluiza.com.br/busca/vitaminas/")
 
 # get the total of results
 total = driver.find_element(By.XPATH, '//h1[@itemprop="description"]/small').text
-
 total_numbers = [float(s) for s in re.findall(r"-?\d+\.?\d*", total.replace(",", ""))]
-
 total = total_numbers[0]
 
 bypage = 60
@@ -73,7 +71,7 @@ PAGINACION_HASTA = int(input("Extraer datos hasta pagina: "))
 while PAGINACION_HASTA >= PAGINACION_DESDE:
 
     current_link = set_link(PAGINACION_DESDE)
-    print("START WITH: ", current_link)
+    print("go to ...", current_link)
 
     driver.get(current_link)
 
@@ -119,7 +117,7 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
                 price = ""
 
             try:
-                oldprice = (
+                oldprice_list = (
                     driver.find_element(
                         By.XPATH,
                         '//div[@class="price-template"]/div[@class="price-template__from"]',
@@ -127,6 +125,8 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
                     .text.replace("\n", "")
                     .replace("\t", "")
                 )
+                list_numbers = re.findall(r'\d+', oldprice_list)
+                oldprice = list_numbers[0]
             except:
                 oldprice = ""
 
@@ -155,10 +155,9 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
                 sellby = ""
 
             try:
-                id_list = driver.find_elements(
+                id = driver.find_element(
                     By.XPATH, '//small[@class="header-product__code"]'
-                )
-                id = id_list[0].text.replace("\n", "").replace("\t", "")
+                ).text.replace("\n", "").replace("\t", "")[7:17]
             except:
                 id = ""
 

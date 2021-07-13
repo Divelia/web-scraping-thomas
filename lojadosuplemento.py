@@ -5,6 +5,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
+import math
+import re
 
 list_agents = [
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36",
@@ -21,6 +23,22 @@ def set_url(n):
         url_origin = 'https://www.lojadosuplemento.com.br/pesquisa?t=VITAMINAS#/pagina-{}'.format(n)
     return url_origin
 
+driver.get(set_url(1))
+
+total_products_string = driver.find_element(
+    By.XPATH,
+    '//div[@class="search-description"]//p/strong',
+).text
+
+total_numbers = [float(s) for s in re.findall(r"-?\d+\.?\d*", total_products_string.replace(",", ""))]
+
+bypage = 15
+total_products = total_numbers[0]
+
+print('total of products  ',total_products, ' by page: ', bypage)
+
+total_of_pages = math.ceil(total_products / bypage)
+print("total of pages ", total_of_pages)
 
 PAGINA_INICIO = int(input('Extraer datos desde pagina: '))
 PAGINA_FIN = int(input('Extraer datos hasta pagina: '))
@@ -60,8 +78,8 @@ while PAGINA_FIN >= PAGINA_INICIO:
       except:
         oldprice = ''
       try:
-        price_list = driver.find_element(By.XPATH, '//div[@class="block-1 savings"]/strong[@class="best-price"]')
-        price = price_list[0].text.replace('\n', '').replace('\t', '')
+        price_list = driver.find_elements(By.XPATH, '//div[@class="block-1 savings"]/strong[@class="best-price"]')
+        price = price_list[0].get_attribute('innerText').replace('\n', '').replace('\t', '')
       except:
         price = ''
       try:
@@ -109,6 +127,9 @@ while PAGINA_FIN >= PAGINA_INICIO:
       driver.back()
 
   PAGINA_INICIO += 1
+
+driver.close()
+
 dicts = {}
 
 dicts["name"] = titles
