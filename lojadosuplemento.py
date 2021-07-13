@@ -124,7 +124,7 @@ while PAGINA_FIN >= PAGINA_INICIO:
       driver.back()
     except Exception as e:
       print (e)
-      driver.back()
+      continue
 
   PAGINA_INICIO += 1
 

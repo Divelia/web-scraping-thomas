@@ -13,7 +13,7 @@ opts.add_argument("user-agent=" + list_agents[0])
 
 driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
 
-url_origin = "https://www.submarino.com.br/busca/vitaminas?content=VITAMINAS&filter=%7B%22id%22%3A%22categoria%22%2C%22value%22%3A%22Suplementos+e+Vitaminas%22%2C%22fixed%22%3Afalse%7D&sortBy=relevance&source=nanook&testab=searchTestAB%3Dold&rc=VITAMINAS"
+url_origin = "https://www.submarino.com.br/busca/vitamina?rc=VITAMINA"
 
 
 def set_url(n):
@@ -21,7 +21,6 @@ def set_url(n):
         return url_origin
     else:
         return url_origin + "&limit=24&offset={}".format(24 * (n - 1))
-
 
 driver.get(url_origin)
 
@@ -166,6 +165,6 @@ except:
 
 if df_previous is not None:
     df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
-    df_all_rows.to_excel("outputs//fahorro.xlsx")
+    df_all_rows.to_excel("outputs//fahorro.xlsx", ignore_index=True)
 else:
     df_web.to_excel("outputs//fahorro.xlsx", index=False)

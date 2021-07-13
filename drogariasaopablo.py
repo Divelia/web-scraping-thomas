@@ -38,7 +38,7 @@ total_products_string = driver.find_elements(
 bypage = int(total_products_string[0].text.replace(' ', ''))
 total_products = int(total_products_string[1].text.replace(' ', ''))
 
-print('total of producst  ',total_products, ' by page: ', bypage)
+print('total of products  ',total_products, ' by page: ', bypage)
 
 total_of_pages = math.ceil(total_products / bypage)
 print("total of pages ", total_of_pages)
