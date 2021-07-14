@@ -113,7 +113,7 @@ while PAGINA_FIN >= PAGINA_INICIO:
 
 dicts = {}
 
-dicts["ids"] = skus
+dicts["id"] = skus
 dicts["name"] = titles
 dicts["image"] = images
 dicts["price"] = prices

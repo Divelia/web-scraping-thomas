@@ -274,7 +274,7 @@ except:
 
 if df_previous is not None:
 #   df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
-  df_all_rows = pd.concat([df_previous, df_web])
-  df_all_rows.to_excel("outputs//mercado-libre-br.xlsx")    
+  df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
+  df_all_rows.to_excel("outputs//mercado-libre-br.xlsx", index=False)    
 else:
-  df_web.to_excel("outputs//mercado-libre-br.xlsx")
+  df_web.to_excel("outputs//mercado-libre-br.xlsx", index=False)
