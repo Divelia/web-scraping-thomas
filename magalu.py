@@ -9,22 +9,29 @@ import pandas as pd
 import re
 import time
 import random
-
-list_agents = [
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.110 Safari/537.36",
-]
-
-opts = Options()
-opts.add_argument("user-agent=" + list_agents[0])
-
-driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
-
-driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
+from utils import *
+import math
 
 # URL origin
-driver.get("https://www.magazineluiza.com.br/busca/vitaminas/")
+search = choose_search()
+
+url_origin = "https://www.magazineluiza.com.br/busca/{}/".format(search)
+
+current_agent = generate_agents()
+
+opts = Options()
+opts.add_argument("user-agent=" + current_agent)
+opts.add_argument("--start-maximized")
+opts.add_argument("--disable-extensions")
+# current_ip = generate_ip()
+# opts.add_argument('--proxy-server={}'.format(current_ip))
+
+driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
+
+
+print('Going to... ', url_origin)
+
+driver.get(url_origin)
 
 # get the total of results
 total = driver.find_element(By.XPATH, '//h1[@itemprop="description"]/small').text
@@ -33,12 +40,9 @@ total = total_numbers[0]
 
 bypage = 60
 
-print("total of poroducts: ", total)
+print("Total of poroducts: ", total)
 
-if total % bypage == 0:
-    TOTAL_PAGES = int(total // bypage)
-else:
-    TOTAL_PAGES = int(total // bypage + 1)
+TOTAL_PAGES = math.ceil(total/bypage)
 
 print("Total of pages: ", TOTAL_PAGES)
 
@@ -53,10 +57,10 @@ images = []
 
 def set_link(n):
     if n == 1:
-        link_pattern = "https://www.magazineluiza.com.br/busca/vitaminas/"
+        link_pattern = url_origin
     else:
         link_pattern = (
-            "https://www.magazineluiza.com.br/busca/vitaminas/"
+            url_origin
             + str(int(n))
         )
     return link_pattern
@@ -71,7 +75,7 @@ PAGINACION_HASTA = int(input("Extraer datos hasta pagina: "))
 while PAGINACION_HASTA >= PAGINACION_DESDE:
 
     current_link = set_link(PAGINACION_DESDE)
-    print("go to ...", current_link)
+    print("Going to ...", current_link)
 
     driver.get(current_link)
 
@@ -194,8 +198,12 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
 
             driver.back()
         except Exception as e:
-            print(e)
-            driver.back()
+            driver.quit()
+            current_agent = generate_agents()
+            opts.add_argument("user-agent={}".format(current_agent))
+            current_ip = generate_ip()
+            opts.add_argument('--proxy-server={}'.format(current_ip))
+            driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
 
     PAGINACION_DESDE += 1
 
@@ -212,7 +220,7 @@ dicts["image"] = images
 df_web = pd.DataFrame.from_dict(dicts)
 print(df_web)
 try:
-    df_previous = pd.read_excel("outputs//magalu.xlsx")
+    df_previous = pd.read_excel("outputs//magalu-{}.xlsx".format(search))
     print(df_previous)
 except:
     df_previous = pd.DataFrame()
@@ -221,7 +229,7 @@ except:
 print("is empty: ", df_previous.empty)
 
 if df_previous.empty:
-    df_web.to_excel("outputs//magalu.xlsx", index=False)
+    df_web.to_excel("outputs//magalu-{}.xlsx".format(search), index=False)
 else:
     df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
-    df_all_rows.to_excel("outputs//magalu.xlsx", index=False)
+    df_all_rows.to_excel("outputs//magalu-{}.xlsx".format(search), index=False)
