@@ -69,102 +69,114 @@ sellbys = []
 categories = []
 
 while PAGINA_FIN >= PAGINA_INICIO:
+    try:
 
-    driver.get(set_url(PAGINA_INICIO))
+        driver.get(set_url(PAGINA_INICIO))
 
-    print("go to ... ", set_url(PAGINA_INICIO))
+        print("go to ... ", set_url(PAGINA_INICIO))
 
-    links_productos = driver.find_elements(
-        By.XPATH,
-        '//div[@class="product_productCardSummary___YXeD"]/a',
-    )
+        links_productos = driver.find_elements(
+            By.XPATH,
+            '//div[@class="product_productCardSummary___YXeD"]/a',
+        )
 
-    links_de_la_pagina = []
-    for a_link in links_productos:
-        links_de_la_pagina.append(a_link.get_attribute("href"))
+        links_de_la_pagina = []
+        for a_link in links_productos:
+            links_de_la_pagina.append(a_link.get_attribute("href"))
 
-    print("Total of links in present page: ", len(links_de_la_pagina))
+        print("Total of links in present page: ", len(links_de_la_pagina))
 
-    for link in links_de_la_pagina:
-        driver.get(link)
-        try:
+        for link in links_de_la_pagina:
+            driver.get(link)
             try:
-                title = driver.find_element(
-                    By.XPATH, '//h1[@data-testid="product-details-header"]'
-                ).text
-            except:
-                title = ""
+                try:
+                    title = driver.find_element(
+                        By.XPATH, '//h1[@data-testid="product-details-header"]'
+                    ).text
+                except:
+                    title = ""
 
-            try:
-                brand = (
-                    driver.find_element(
-                        By.XPATH, '//h2[@class="brand-name_brandName__1-04B header"]/a'
+                try:
+                    brand = (
+                        driver.find_element(
+                            By.XPATH, '//h2[@class="brand-name_brandName__1-04B header"]/a'
+                        )
+                        .get_attribute("innerText")
                     )
-                    .get_attribute("innerText")
+                except:
+                    brand = ""
+
+                try:
+                    price = driver.find_element(
+                        By.XPATH,
+                        '//h4[@class="offer-details_minPrice__3tb1i header header_inline__ElIzA"]',
+                    ).text
+                except:
+                    price = ""
+
+                try:
+                    sellby = driver.find_element(
+                        By.XPATH, '//span[@class="product-features_blueText__pN9m6"]'
+                    ).text
+                except:
+                    sellby = ""
+
+                try:
+                    category = driver.find_element(
+                        By.XPATH,
+                        '//*[@id="scrollContainer"]/section/div[1]/div[1]/ol/li[3]/a/p',
+                    ).text
+                except:
+                    category = ""
+
+                try:
+                    image = driver.find_element(By.XPATH, '//div[@data-automation-id="hero-image"]/div/img').get_attribute("src")
+                except:
+                    image = ""
+
+                try:
+                    id = title[:2] + brand[:2] + price[:2] + sellby[:2] + category[:2] + image[:1]
+                except:
+                    id = ""
+
+
+                ids.append(id)
+                titles.append(title)
+                brands.append(brand)
+                prices.append(price)
+                sellbys.append(sellby)
+                categories.append(category)
+                images.append(image)
+
+                print(
+                    "Item: ",
+                    {
+                        "id": id,
+                        "title": title,
+                        "brand": brand,
+                        "price": price,
+                        "sellby": sellby,
+                        "categories": category,
+                        "image": image,
+                    },
                 )
-            except:
-                brand = ""
 
-            try:
-                price = driver.find_element(
-                    By.XPATH,
-                    '//h4[@class="offer-details_minPrice__3tb1i header header_inline__ElIzA"]',
-                ).text
-            except:
-                price = ""
+            except Exception as e:
+                print(e)
+                driver.back()
 
-            try:
-                sellby = driver.find_element(
-                    By.XPATH, '//span[@class="product-features_blueText__pN9m6"]'
-                ).text
-            except:
-                sellby = ""
-
-            try:
-                category = driver.find_element(
-                    By.XPATH,
-                    '//*[@id="scrollContainer"]/section/div[1]/div[1]/ol/li[3]/a/p',
-                ).text
-            except:
-                category = ""
-
-            try:
-                image = driver.find_element(By.XPATH, '//div[@data-automation-id="hero-image"]/div/img').get_attribute("src")
-            except:
-                image = ""
-
-            try:
-                id = title[:2] + brand[:2] + price[:2] + sellby[:2] + category[:2] + image[:1]
-            except:
-                id = ""
-
-
-            ids.append(id)
-            titles.append(title)
-            brands.append(brand)
-            prices.append(price)
-            sellbys.append(sellby)
-            categories.append(category)
-            images.append(image)
-
-            print(
-                "Item: ",
-                {
-                    "id": id,
-                    "title": title,
-                    "brand": brand,
-                    "price": price,
-                    "sellby": sellby,
-                    "categories": category,
-                    "image": image,
-                },
-            )
-
-        except Exception as e:
-            print(e)
-            driver.back()
-
-    PAGINA_INICIO += 1
+        PAGINA_INICIO += 1
+    except:
+        dicts = {}
+        dicts["id"] = ids
+        dicts["title"] = titles
+        dicts["brand"] = brands
+        dicts["price"] = prices
+        dicts["sellby"] = sellbys
+        dicts["category"] = categories
+        dicts["image"] = images
+        df_web = pd.DataFrame.from_dict(dicts)
+        df_web.to_excel("outputs//walmart-{}.xlsx".format('backup'), index=False)
 
 driver.close()
 
