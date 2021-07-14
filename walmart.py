@@ -41,6 +41,10 @@ def set_url(n):
 
 driver.get(url_origin)
 
+WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.XPATH, '//div[@class="header_title__2CdR9"]/p'))
+)
+
 total_products_string = driver.find_elements(
     By.XPATH,
     '//div[@class="header_title__2CdR9"]/p',
