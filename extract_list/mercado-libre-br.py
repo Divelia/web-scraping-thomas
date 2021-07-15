@@ -1,4 +1,4 @@
-from time import time
+# from time import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -13,7 +13,7 @@ import random
 from utils import *
 import math
 # import requests
-from lxml import html
+# from lxml import html
  
 headers = {
     "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36",
@@ -28,7 +28,8 @@ opts.add_argument("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
 opts.add_argument("--start-maximized")
 opts.add_argument("--disable-extensions")
 
-driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
+# driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
+driver = webdriver.Chrome('./chromedriver', chrome_options=opts)
 
 url_origin = "https://lista.mercadolivre.com.br/{0}#D[A:{0}]".format(search)
 
@@ -54,18 +55,6 @@ print("Total of pages: ", TOTAL_PAGES)
 
 driver.close()
 
-ids = []
-titles = []
-brands = []
-prices = []
-discounts = []
-stocks = []
-categories = []
-weights = []
-images = []
-unidades_por_kit = []
-
-
 def set_link(n):
     if n == 1:
         link_pattern = url_origin
@@ -89,8 +78,6 @@ brands = []
 prices = []
 oldprices = []
 images = []
-
-
 
 while PAGINACION_HASTA >= PAGINACION_DESDE:
 
