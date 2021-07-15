@@ -7,12 +7,12 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 import re
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 from time import sleep
 import random
 from utils import *
 import math
-import requests
+# import requests
 from lxml import html
  
 headers = {
