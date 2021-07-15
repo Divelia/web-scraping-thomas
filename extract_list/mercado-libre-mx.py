@@ -7,59 +7,51 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 import re
-import time
+from bs4 import BeautifulSoup
+from time import sleep
 import random
-
-list_agents = [
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.110 Safari/537.36",
-]
-
+from utils import *
+import math
+import requests
+from lxml import html
+ 
+headers = {
+    "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36",
+}
+search = choose_search()
 
 opts = Options()
 
-# Definimos el User Agent en Selenium utilizando la clase Options
-opts.add_argument("user-agent=" + list_agents[0])
+opts.add_argument("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36")
+opts.add_argument("--start-maximized")
+opts.add_argument("--disable-extensions")
 
 driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
 
-# URL origin
-driver.get("https://listado.mercadolibre.com.mx/vitaminas#D[A:vitaminas]")
+url_origin = "https://listado.mercadolibre.com.mx/{0}#D[A:{0}]".format(search)
 
-# get the total of results
+
+print('Going to... ', url_origin)
+
+driver.get(url_origin)
+
 total = driver.find_element(
     By.XPATH, '//span[@class="ui-search-search-result__quantity-results"]'
 ).text
 
 total_numbers = [float(s) for s in re.findall(r"-?\d+\.?\d*", total.replace(",", ""))]
 
-total = total_numbers[0]
+total = float(str(total_numbers[0]).replace('.', ''))
 
-bypage = 54
+bypage = 56
 
 print("total of poroducts: ", total)
 
-if total % bypage == 0:
-    TOTAL_PAGES = int(total // bypage)
-else:
-    TOTAL_PAGES = int(total // bypage + 1)
+TOTAL_PAGES = math.ceil(total // bypage)
 
 print("Total of pages: ", TOTAL_PAGES)
 
-
-def close_modals():
-    try:
-        disclaimer = driver.find_element(
-            By.XPATH, '//button[@id="newCookieDisclaimerButton"]'
-        )
-        disclaimer.click()  # lo obtenemos y le damos click
-    except Exception as e:
-        print(e)
-        None
-
-
-close_modals()
+driver.close()
 
 ids = []
 titles = []
@@ -70,183 +62,108 @@ stocks = []
 categories = []
 weights = []
 images = []
+unidades_por_kit = []
 
 
 def set_link(n):
     if n == 1:
-        link_pattern = "https://listado.mercadolibre.com.mx/vitaminas"
+        link_pattern = "https://listado.mercadolibre.com.mx/{}".format(search)
     else:
         link_pattern = (
-            "https://listado.mercadolibre.com.mx/vitaminas"
+            "https://listado.mercadolibre.com.mx/{}".format(search)
             + "_Desde_"
             + str(int(49 + (n - 2) * 48))
         )
     return link_pattern
 
 
-# set pagination rules
 
-PAGINACION_DESDE = int(input("Desde pagina: "))
-if PAGINACION_DESDE < 0 | PAGINACION_DESDE > TOTAL_PAGES:
-    print("pagina no debe ser menor que cero ni mayor que ", TOTAL_PAGES)
-    PAGINACION_DESDE = int(input("Desde pagina: "))
-
-PAGINACION_HASTA = int(input("Hasta pagina: "))
-if PAGINACION_HASTA < 0 | PAGINACION_HASTA > TOTAL_PAGES:
-    print("pagina no debe ser menor que cero ni mayor que ", TOTAL_PAGES)
-    PAGINACION_HASTA = int(input("Desde pagina: "))
-
-if len(list_agents) < PAGINACION_HASTA - PAGINACION_DESDE:
-    list_agents = list_agents * (PAGINACION_HASTA - PAGINACION_DESDE)
+PAGINACION_DESDE = int(input("Extraer datos desde pagina: "))
+PAGINACION_HASTA = int(input("Extraer datos hasta pagina: "))
 
 n = 0
 
-# Mientras la pagina en la que me encuentre, sea menor que la maxima pagina que voy a sacar... sigo ejecutando...
+titles = []
+brands = []
+prices = []
+oldprices = []
+images = []
+
+
+
 while PAGINACION_HASTA >= PAGINACION_DESDE:
 
-    opts.add_argument("user-agent=" + list_agents[n])
-    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
+    print('Start page number {}'.format(PAGINACION_DESDE))
+    sleep(random.uniform(1.0, 5.0))
 
-    current_link = set_link(PAGINACION_DESDE)
-    print("START WITH: ", current_link)
+    try:
+        current_url = set_link(PAGINACION_DESDE)
+        print('Going to... ', current_url)
+        driver.get(current_url)
 
-    driver.get(current_link)
+        products = driver.find_elements_by_xpath("//ol[@class='ui-search-layout ui-search-layout--stack']/li")
 
-    close_modals()
-
-    # links_products = driver.find_element_by_xpath('//section[@class="ui-search-results ui-search-results--without-disclaimer"]//ol/li//a[@class="ui-search-result__content ui-search-link"]')
-
-    time.sleep(random.uniform(1.0, 5.0))
-
-    links_products = driver.find_elements(
-        By.XPATH,
-        '//section[@class="ui-search-results ui-search-results--without-disclaimer"]//ol/li//a[@class="ui-search-result__content ui-search-link"]',
-    )
-
-    print('Total of producst link: ', len(links_products))
-
-    links_de_la_pagina = []
-
-    for a_link in links_products:
-        links_de_la_pagina.append(a_link.get_attribute("href"))
-
-    for link in links_de_la_pagina:
-
-        try:
-            # Voy a cada uno de los links de los detalles de los productos
-            driver.get(link)
-
-            title = (
-                driver.find_element(By.XPATH, '//h1[@class="ui-pdp-title"]')
-                .text.replace("\n", "")
-                .replace("\t", "")
-            )
-            price = (
-                driver.find_element(
-                    By.XPATH,
-                    '//div[@class="ui-pdp-price__second-line"]/span/span/span[@class="price-tag-fraction"]',
-                )
-                .text.replace("\n", "")
-                .replace("\t", "")
-            )
-
+        driver.execute_script("window.scrollTo({top: 0, behavior: 'smooth'});")
+        
+        for product in products:
             try:
-                find_discount = (
-                    driver.find_element(
-                        By.XPATH,
-                        '//s/span[@class="price-tag-text-sr-only"]',
-                    )
-                    .text.replace("\n", "")
-                    .replace("\t", "")
-                )
-                print(find_discount)
+                # title = product.xpath(".//h2[@class='ui-search-item__title']/text()")[0]
+                title = product.find_element_by_xpath(".//h2[@class='ui-search-item__title']").text
             except:
-                find_discount = ""
-
+                title = ''
             try:
-
-                if "Antes" in find_discount:
-                    nums = [float(s) for s in re.findall(r"-?\d+\.?\d*", find_discount)]
-                    discount = nums[0]
-                else:
-                    discount = ""
+                # price = product.xpath('.//div[@class="ui-search-price__second-line"]/span[@class="price-tag ui-search-price__part"]/span[@class="price-tag-text-sr-only"]/text()')[0].replace(' reais con', '.').replace(' centavos', '').replace(' ', '')
+                prices = product.find_elements_by_xpath('.//div[@class="ui-search-price__second-line"]/span[@class="price-tag ui-search-price__part"]/span[@class="price-tag-text-sr-only"]')
+                price = [p.text for p in prices][0]
             except:
-                pass
-            print('disccount: ', discount)
-            stock = (
-                driver.find_element(
-                    By.XPATH, '//span[@class="ui-pdp-buybox__quantity__selected"]'
-                )
-                .text.replace("\n", "")
-                .replace("\t", "")
-            )
-            category_list = driver.find_elements(
-                By.XPATH, '//a[@class="andes-breadcrumb__link"]'
-            )
-            category = category_list[-1].text.replace("\n", "").replace("\t", "")
-            print("category: ", category)
+                price = ''
+            try:
+                # oldprice = product.xpath('.//s/span[@class="price-tag-text-sr-only"]/text()')[0].replace('Antes: ', '').replace(' reais', '')
+                oldprice = product.find_element_by_xpath('.//s/span[@class="price-tag-text-sr-only"]').text.replace('Antes: ', '').replace(' reais', '')
+            except:
+                oldprice = ''
+            try:
+                WebDriverWait(product, 20).until(EC.presence_of_element_located((By.XPATH, "//img[@class='ui-search-result-image__element']")))
+                image = [n.get_attribute("currentSrc") for n in product.find_elements(By.XPATH, ".//img[@class='ui-search-result-image__element']")][0]
+            except:
+                
+                image = ''
 
-            image_list = driver.find_elements(By.XPATH, '//figure[@class="ui-pdp-gallery__figure"]/img')
-            image = image_list[0].get_attribute("src")
-
-            table = driver.find_elements_by_xpath(
-                './/tbody[@class="andes-table__body"]/tr'
-            )
-            print(len(table))
-
-            # search in table for extra information as marca and peso neto
-            if table:
-
-                headers = [tr.find_element_by_tag_name("th") for tr in table]
-                headers_name = [th.text for th in headers]
-
-                values = [tr.find_element_by_tag_name("td") for tr in table]
-                values_name = [td.text for td in values]
-
-                print('headers: ', headers_name)
-                print('marca is in ? ')
-                if 'Marca' in headers_name:
-                    indexof = headers_name.index('Marca')
-                    brand = values_name[indexof]
-                if 'Peso neto' in headers_name:
-                    indexof = headers_name.index('Peso neto')
-                    weight = values_name[indexof]
-
-
-            print("brand: ", brand)
-            print("weight: ", weight)
-
-            ids.append(link[41:50])
             titles.append(title)
-            brands.append(brand)
             prices.append(price)
-            discounts.append(discount)
-            stocks.append(stock)
-            categories.append(category)
-            weights.append(weight)
+            oldprices.append(oldprices)
             images.append(image)
 
-            # following data extracted
-
             print('Item: ', {
-                'id': link[41:50],
                 'title': title,
-                'brand': brand,
                 'price': price,
-                'oldprice': discount,
-                'stock': stock,
-                'category': category,
-                'weight': weight,
-                'image': image
+                'oldprice': oldprice,
+                'image': image,
             })
 
-            driver.back()
-        except Exception as e:
-            print(e)
-            driver.back()
 
-    PAGINACION_DESDE += 1
-    n += 1
+        PAGINACION_DESDE += 1
+        print('Finish page number {}'.format(PAGINACION_DESDE))
+        n += 1
+        if PAGINACION_DESDE > PAGINACION_HASTA:
+            print('Scraper finished')
+            break
+
+        print('PAGINACION_DESDE: ', PAGINACION_DESDE, ' ', int(PAGINACION_DESDE))
+        print('PAGINACION_HASTA: ', PAGINACION_HASTA, ' ', int(PAGINACION_HASTA))
+    except Exception as e:
+        print(e)
+        print('cant access to link')
+        print('changing proxy')
+        driver.quit()
+        opts = Options()
+        current_agent = generate_agents()
+        opts.add_argument("user-agent=" + current_agent)
+        current_ip = generate_ip()
+        opts.add_argument('--proxy-server={}'.format(current_ip))
+        driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
+        # url_web = requests.get(current_url, proxies={'http': proxy, 'https': proxy}, timeout=3)
+        continue
 
 dicts = {}
 
@@ -263,7 +180,7 @@ dicts["image"] = images
 df_web = pd.DataFrame.from_dict(dicts)
 print(df_web)
 try:
-    df_previous = pd.read_excel("outputs//mercado-libre-mx.xlsx")
+    df_previous = pd.read_excel("outputs//mercadolibremx-{}.xlsx".format(search))
     print(df_previous)
 except:
     df_previous = pd.DataFrame()
@@ -272,7 +189,7 @@ except:
 print('is empty: ', df_previous.empty)
 
 if df_previous.empty:
-  df_web.to_excel("outputs//mercado-libre-mx.xlsx", index=False)
+  df_web.to_excel("outputs//mercadolibremx-{}.xlsx".format(search), index=False)
 else:
   df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
-  df_all_rows.to_excel("outputs//mercado-libre-mx.xlsx", index=False)
+  df_all_rows.to_excel("outputs//mercadolibremx-{}.xlsx".format(search), index=False)

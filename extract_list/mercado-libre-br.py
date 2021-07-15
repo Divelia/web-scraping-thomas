@@ -18,6 +18,7 @@ from lxml import html
 headers = {
     "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36",
 }
+
 search = choose_search()
 search = search[:-1]
 
@@ -107,7 +108,7 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
         products = driver.find_elements_by_xpath("//ol[@class='ui-search-layout ui-search-layout--stack']/li")
 
         driver.execute_script("window.scrollTo({top: 0, behavior: 'smooth'});")
-        
+
         for product in products:
             try:
                 # title = product.xpath(".//h2[@class='ui-search-item__title']/text()")[0]
