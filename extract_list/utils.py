@@ -1,5 +1,5 @@
 """
-useful functions to use in all script files
+Useful functions to use in all script files
 """
 
 import re
@@ -22,7 +22,7 @@ def choose_search():
         except:
             raise Exception('You should choose between (1) and (2)')
 
-def generate_ip():
+def generate_free_proxy():
     proxies_list = pd.read_csv('list_ips.txt')
     random_ip = random.choice(list(proxies_list))
     return random_ip
