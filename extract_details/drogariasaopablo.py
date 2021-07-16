@@ -21,6 +21,7 @@ opts = Options()
 opts.add_argument("user-agent=" + list_agents[2])
 opts.add_argument("--start-maximized")
 opts.add_argument("--disable-extensions")
+opts.add_argument("--disable-notifications")
 
 driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=opts)
 
