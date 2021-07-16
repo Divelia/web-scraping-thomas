@@ -15,7 +15,7 @@ headers = {
 
 search = choose_search()
 
-url_origin = "https://www.magazineluiza.com.br/busca/{}/".format(search)
+url_origin = "https://www.lojadosuplemento.com.br/pesquisa?t={}".format(search.upper())
 
 print("Going to... ", url_origin)
 
@@ -23,15 +23,13 @@ response = requests.get(url_origin, headers=headers)
 
 parser = html.fromstring(response.text)
 
-# soup = BeautifulSoup(response.text)
-
 total = parser.xpath(
-    '//h1[@itemprop="description"]/small/text()'
-)[0]
+    '//div[@class="wrapper text"]//p/strong/text()'
+)
 
-total_of_products = get_list_of_numbers(total)[0]
+total_of_products = get_list_of_numbers(total[0])[0]
 
-bypage = 60
+bypage = 15
 
 print("total of poroducts: ", total_of_products)
 
@@ -44,7 +42,7 @@ def set_link(n):
     if n == 1:
         link_pattern = url_origin
     else:
-        link_pattern = url_origin + "{}/".format(n)
+        link_pattern = url_origin + "#/pagina-{}".format(n)
     return link_pattern
 
 
@@ -57,7 +55,8 @@ titles = []
 prices = []
 oldprices = []
 images = []
-kits = []
+unique_prices = []
+lmpm_prices = []
 
 error = False
 
@@ -88,56 +87,66 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
             response = requests.get(current_url, headers=headers)
 
         parser = html.fromstring(response.text)
-        products = parser.xpath('//ul[@class="productShowCase big"]/li[contains(@id, "product_")]')
 
-        for index, product in enumerate(products):
+        products = parser.xpath("//div[@class='wd-browsing-grid-list   wd-widget-js']/ul/li")
+
+        print(len(products))
+
+        for product in products:
             try:
                 title = product.xpath(
-                    ".//h3[@class='productTitle']/text()"
+                    ".//div[@class='name']/a/text()"
                 )[0]
             except:
                 title = ""
+
+            try:
+                price = (
+                    product.xpath(
+                        './/div[@class="block-1 savings"]/strong/text()'
+                    )
+                )[0]
+            except:
+                price = ""
+
             try:
                 oldprice = product.xpath(
-                    './/span[@class="productPrice"]/span[@class="originalPrice"]/text()'
+                    './/div[@class="block-1 savings"]/del/text()'
                 )[0]
             except:
                 oldprice = ""
 
             try:
-                kit = product.xpath(
-                    './/span[@class="installmentPrice"]/text()'
-                )[0]
-            except:
-                kit = ''
-            try:
-                price = (
-                    product.xpath(
-                        './/span[@class="price-value"]/text()'
-                    )
-                )[0].replace('\n', ' ').replace('\r', ' ').strip()
-            except:
-                try:
-                    price = (
-                        product.xpath(
-                            './/span[@class="price"]/text()'
-                        )
-                    )[0].replace('\n', ' ').replace('\r', ' ').strip()
-                except:
-                    price = ""
-            try:
                 image = product.xpath(
-                    './/img[@class="product-image"]/@src'
+                    './/div[@class="variation variation-root"]/img/@src'
                 )[0]
             except Exception as e:
                 print(e)
                 image = ""
 
+            try:
+                unique_price = product.xpath(
+                    './/div[@class="block-2 condition"]/span[1]/text()'
+                )[0]
+            except:
+                unique_price = ''
+
+            try:
+                lmpm_price = product.xpath(
+                    './/div[@class="block-2 condition"]/span[2]/text()'
+                ) + product.xpath(
+                    './/div[@class="block-2 condition"]/span[3]/text()'
+                )
+                lmpm_price = ' '.join(lmpm_price)
+            except:
+                lmpm_price = ''
+
             titles.append(title)
             prices.append(price)
             oldprices.append(oldprice)
             images.append(image)
-            kits.append(kit)
+            unique_prices.append(unique_price)
+            lmpm_prices.append(lmpm_price)
 
             print(
                 "Item: ",
@@ -146,11 +155,13 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
                     "price": price,
                     "oldprice": oldprice,
                     "image": image,
-                    "kit": kit
+                    "unique_price": unique_price,
+                    "lmpm_price": lmpm_price
                 },
             )
 
         PAGINACION_DESDE += 1
+
         print("Finish page number {}".format(PAGINACION_DESDE))
         n += 1
         if PAGINACION_DESDE > PAGINACION_HASTA:
@@ -173,19 +184,20 @@ dicts["name"] = titles
 dicts["price"] = prices
 dicts["oldprice"] = oldprices
 dicts["image"] = images
-dicts["kit"] = kits
+dicts["unique_price"] = unique_prices
+dicts["lmpm_price"] = lmpm_prices
 
 df_web = pd.DataFrame.from_dict(dicts)
 print(df_web)
 
 try:
-    df_previous = pd.read_excel("outputs//magalu-{}.xlsx".format(search))
+    df_previous = pd.read_excel("outputs//lojadosuplemento-{}.xlsx".format(search))
 except:
     df_previous = pd.DataFrame()
     pass
 
 if df_previous.empty:
-    df_web.to_excel("outputs//magalu-{}.xlsx".format(search), index=False)
+    df_web.to_excel("outputs//lojadosuplemento-{}.xlsx".format(search), index=False)
 else:
     df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
-    df_all_rows.to_excel("outputs//magalu-{}.xlsx".format(search), index=False)
+    df_all_rows.to_excel("outputs//lojadosuplemento-{}.xlsx".format(search), index=False)

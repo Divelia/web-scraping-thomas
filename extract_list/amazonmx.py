@@ -80,9 +80,9 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
                 current_url,
                 headers=headers,
                 proxies={
-                    "http": current_proxy,
-                    "https": current_proxy,
-                    "ftp": current_proxy,
+                    "http": "http://" + str(current_proxy),
+                    "https": "https://" + str(current_proxy),
+                    "ftp": "ftp://" + str(current_proxy),
                 },
             )
         else:

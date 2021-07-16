@@ -85,7 +85,15 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
         # requests parser
         if error:
             current_proxy = generate_free_proxy()
-            response = requests.get(current_url, headers=headers, proxies={"http": current_proxy, "https": current_proxy, "ftp": current_proxy})
+            response = requests.get(
+                current_url,
+                headers=headers,
+                proxies={
+                    "http": "http://" + str(current_proxy),
+                    "https": "https://" + str(current_proxy),
+                    "ftp": "ftp://" + str(current_proxy),
+                },
+            )
         else:
             response = requests.get(current_url, headers=headers)
 
@@ -95,7 +103,7 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
         )
         # beautiful soup parser
         soup = BeautifulSoup(response.text)
-        products_soup = soup.find_all('li', class_="ui-search-layout__item")
+        products_soup = soup.find_all("li", class_="ui-search-layout__item")
 
         for index, product in enumerate(products):
             try:
@@ -115,16 +123,20 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
                 price = ""
             try:
                 oldprice = (
-                    product.xpath(
-                        './/s/span[@class="price-tag-text-sr-only"]/text()'
-                    )[0]
+                    product.xpath('.//s/span[@class="price-tag-text-sr-only"]/text()')[
+                        0
+                    ]
                     .replace("Antes: ", "")
                     .replace(" reais", "")
                 )
             except:
                 oldprice = ""
             try:
-                image = products_soup[0].find('img', class_="ui-search-result-image__element").get('data-src')
+                image = (
+                    products_soup[0]
+                    .find("img", class_="ui-search-result-image__element")
+                    .get("data-src")
+                )
             except Exception as e:
                 print(e)
                 image = ""

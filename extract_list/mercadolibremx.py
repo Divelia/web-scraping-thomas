@@ -16,7 +16,7 @@ headers = {
 search = choose_search()
 search = search[:-1]
 
-url_origin = "https://listado.mercadolibre.com.mx/{0}".format(search+"s")
+url_origin = "https://listado.mercadolibre.com.mx/{0}".format(search + "s")
 
 print("Going to... ", url_origin)
 
@@ -41,6 +41,7 @@ print("total of poroducts: ", total)
 TOTAL_PAGES = math.ceil(total // bypage)
 
 print("Total of pages: ", TOTAL_PAGES)
+
 
 def set_link(n):
     if n == 1:
@@ -81,7 +82,16 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
         # requests parser
         if error:
             current_proxy = generate_free_proxy()
-            response = requests.get(current_url, headers=headers, proxies={"http": current_proxy, "https": current_proxy, "ftp": current_proxy}, verify=False)
+            response = requests.get(
+                current_url,
+                headers=headers,
+                proxies={
+                    "http": "http://" + str(current_proxy),
+                    "https": "https://" + str(current_proxy),
+                    "ftp": "ftp://" + str(current_proxy),
+                },
+                verify=False,
+            )
         else:
             response = requests.get(current_url, headers=headers, verify=False)
 
@@ -91,33 +101,37 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
         )
         # beautiful soup parser
         soup = BeautifulSoup(response.text)
-        products_soup = soup.find_all('li', class_="ui-search-layout__item")
+        products_soup = soup.find_all("li", class_="ui-search-layout__item")
 
         for index, product in enumerate(products):
             try:
-                title = product.xpath(".//h2[@class='ui-search-item__title ui-search-item__group__element']/text()")[0]
+                title = product.xpath(
+                    ".//h2[@class='ui-search-item__title ui-search-item__group__element']/text()"
+                )[0]
             except:
                 title = ""
             try:
-                price = (
-                    product.xpath(
-                        './/div[@class="ui-search-price__second-line"]/span[@class="price-tag ui-search-price__part"]/span[@class="price-tag-text-sr-only"]/text()'
-                    )[0]
-                )
+                price = product.xpath(
+                    './/div[@class="ui-search-price__second-line"]/span[@class="price-tag ui-search-price__part"]/span[@class="price-tag-text-sr-only"]/text()'
+                )[0]
             except:
                 price = ""
             try:
                 oldprice = (
-                    product.xpath(
-                        './/s/span[@class="price-tag-text-sr-only"]/text()'
-                    )[0]
+                    product.xpath('.//s/span[@class="price-tag-text-sr-only"]/text()')[
+                        0
+                    ]
                     .replace("Antes: ", "")
                     .replace(" reais", "")
                 )
             except:
                 oldprice = ""
             try:
-                image = products_soup[0].find('img', class_="ui-search-result-image__element").get('data-src')
+                image = (
+                    products_soup[0]
+                    .find("img", class_="ui-search-result-image__element")
+                    .get("data-src")
+                )
             except Exception as e:
                 print(e)
                 image = ""
