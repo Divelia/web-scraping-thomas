@@ -81,7 +81,7 @@ print('total of products to extract: ', len(list_of_products))
 for product in list_of_products:
     try:
         try:
-            title = product.find_element_by_xpath('.//a[@0class="collection-link"]').text
+            title = product.find_element_by_xpath('.//a[@class="collection-link"]').text
         except:
             title = ''
         try:
@@ -119,7 +119,7 @@ driver.close()
 
 dicts = {}
 
-dicts["title"] = titles
+dicts["name"] = titles
 dicts["price"] = prices
 dicts["oldprice"] = oldprices
 dicts["image"] = images

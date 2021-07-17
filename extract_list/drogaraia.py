@@ -203,13 +203,13 @@ df_web = pd.DataFrame.from_dict(dicts)
 print(df_web)
 
 try:
-    df_previous = pd.read_excel("outputs//drogaria-{}.xlsx".format(search))
+    df_previous = pd.read_excel("outputs//drogaraia-{}.xlsx".format(search))
 except:
     df_previous = None
     pass
 
 if df_previous is not None:
     df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
-    df_all_rows.to_excel("outputs//drogaria-{}.xlsx".format(search), index=False)
+    df_all_rows.to_excel("outputs//drogaraia-{}.xlsx".format(search), index=False)
 else:
-    df_web.to_excel("outputs//drogaria-{}.xlsx".format(search), index=False)
+    df_web.to_excel("outputs//drogaraia-{}.xlsx".format(search), index=False)
