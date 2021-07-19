@@ -29,35 +29,23 @@ search = choose_search()
 driver = webdriver.Chrome('./chromedriver', chrome_options=opts)
 
 # URL origin
-url_origin = "https://www.lojadosuplemento.com.br/pesquisa?t={}".format(search.upper())
-
-def set_link(n):
-    if n == 1:
-        link_pattern = url_origin
-    else:
-        link_pattern = url_origin + "#/pagina-{}".format(n)
-    return link_pattern
-
+url_origin = "https://www.sams.com.mx/search/Ntt={}".format(search.capitalize())
 driver.get(url_origin)
 
 WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.XPATH, '//div[@class="wrapper text"]//p/strong'))
+    EC.presence_of_element_located((By.XPATH, '//div[@class="left counter "]'))
 )
 
 total_products_string = driver.find_elements(
     By.XPATH,
-    '//div[@class="wrapper text"]//p/strong',
+    '//div[@class="left counter "]',
 )
-
-print(total_products_string)
-
 total_products = int(get_list_of_numbers(total_products_string[-1].text)[-1])
 
 total_products_bypage = driver.find_elements(
     By.XPATH,
-    '//div[@class="wd-browsing-grid-list   wd-widget-js"]/ul/li',
+    '//div[@class="product-listing  desktop"]/div[contains(@class, "itemBox-container-wrp grid-itemBox-wrp")]',
 )
-
 bypage = len(total_products_bypage)
 
 print('total of products  ', total_products, ' by page: ', bypage)
@@ -70,8 +58,6 @@ titles = []
 prices = []
 oldprices = []
 images = []
-unique_prices = []
-lmpm_prices = []
 
 tries = 0
 
@@ -80,14 +66,13 @@ PAGINA_FIN = int(input('Extraer datos hasta pagina: '))
 
 while PAGINA_FIN >= PAGINA_INICIO:
     try:
-        print('Going to ', set_link(PAGINA_INICIO))
-        driver.get(set_link(PAGINA_INICIO))
+        driver.get(url_origin)
 
         WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//div[@class='wd-browsing-grid-list   wd-widget-js']/ul/li//div[@class='block-1 savings']/strong"))
+            EC.presence_of_element_located((By.XPATH, '//div[@class="product-listing  desktop"]/div[contains(@class, "itemBox-container-wrp grid-itemBox-wrp")]'))
         )
 
-        list_of_products = driver.find_elements(By.XPATH, "//div[@class='wd-browsing-grid-list   wd-widget-js']/ul/li")
+        list_of_products = driver.find_elements(By.XPATH, '//div[@class="product-listing  desktop"]/div[contains(@class, "itemBox-container-wrp grid-itemBox-wrp")]')
 
         sleep(random.uniform(1.0, 3.0))
 
@@ -96,50 +81,31 @@ while PAGINA_FIN >= PAGINA_INICIO:
 
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located(
-                    (By.XPATH, '//div[@class="wd-browsing-grid-list   wd-widget-js"]/ul/li//div[@class="block-1 savings"]/strong'))
+                    (By.XPATH, './/a[@class="item-image"]/img'))
             )
 
             try:
                 try:
-                    title = product.find_element_by_xpath(".//div[@class='name']/a").text
+                    title = product.find_element_by_xpath('.//a[@class="item-name"]').text
                 except:
                     title = ''
-
                 try:
-                    price = product.find_element_by_xpath('.//div[@class="block-1 savings"]/strong').text
+                    price = product.find_element_by_xpath('.//span[@class="normal"]').text
                 except:
                     price = ''
-
                 try:
-                    oldprice = product.find_element_by_xpath('.//div[@class="block-1 savings"]/del').text
+                    oldprice = product.find_element_by_xpath('.//span[@class="normal strikeOffRequire"]').text
                 except:
                     oldprice = ''
-
                 try:
-                    image = product.find_element_by_xpath('.//div[@class="variation variation-root"]/img').get_attribute("src")
+                    image = product.find_element_by_xpath('.//a[@class="item-image"]/img').get_attribute("src")
                 except:
                     image = ''
-
-                try:
-                    unique_price = product.find_element_by_xpath(
-                        './/div[@class="block-2 condition"]/span[1]'
-                    ).text.replace('\n', ' ').replace('\r', ' ').strip()
-                except:
-                    unique_price = ''
-
-                try:
-                    lmpm_pricex = product.find_elements_by_xpath(".//div[@class='block-2 condition']/span")
-                    lmpm_pricexx = [n.text.replace('\n', ' ').replace('\r', ' ').strip() for n in lmpm_pricex]
-                    lmpm_price = lmpm_pricexx[1] + lmpm_pricexx[2]
-                except:
-                    lmpm_price = ''
 
                 titles.append(title)
                 prices.append(price)
                 oldprices.append(oldprice)
                 images.append(image)
-                unique_prices.append(unique_price)
-                lmpm_prices.append(lmpm_price)
 
                 print(
                     "Item: ",
@@ -148,14 +114,11 @@ while PAGINA_FIN >= PAGINA_INICIO:
                         "price": price,
                         "oldprice": oldprice,
                         "image": image,
-                        "unique_price": unique_price,
-                        "lmpm_price": lmpm_price
                     },
                 )
 
             except Exception as e:
                 print(e)
-
     except Exception as e:
         if tries < 5:
             tries += 1
@@ -174,13 +137,11 @@ dicts["name"] = titles
 dicts["price"] = prices
 dicts["oldprice"] = oldprices
 dicts["image"] = images
-dicts["unique_price"] = unique_prices
-dicts["lmpm_price"] = lmpm_prices
 
 df_web = pd.DataFrame.from_dict(dicts)
 
 try:
-    df_previous = pd.read_excel("outputs//lojadosuplemento-{}.xlsx".format(search))
+    df_previous = pd.read_excel("outputs//sams-{}.xlsx".format(search))
     print(df_previous)
 except:
     df_previous = pd.DataFrame()
@@ -189,8 +150,8 @@ except:
 print("is empty: ", df_previous.empty)
 
 if df_previous.empty:
-    df_web.to_excel("outputs//lojadosuplemento-{}.xlsx".format(search), index=False)
+    df_web.to_excel("outputs//sams-{}.xlsx".format(search), index=False)
 else:
     df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
-    df_all_rows.to_excel("outputs//lojadosuplemento-{}.xlsx".format(search), index=False)
+    df_all_rows.to_excel("outputs//sams-{}.xlsx".format(search), index=False)
 

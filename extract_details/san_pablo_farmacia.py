@@ -111,25 +111,12 @@ driver.close()
 dicts = {}
 
 dicts["id"] = ids
-print(len(ids))
-
 dicts["name"] = titles
-print(len(titles))
-
 dicts["price"] = prices
-print(len(prices))
-
 dicts["oldprice"] = oldprices
-print(len(oldprices))
-
 dicts["quantity"] = quantities
-print(len(quantities))
-
 dicts["image"] = images
-print(len(images))
-
 dicts["category"] = categories
-print('categories: ', len(categories))
 
 
 df_web = pd.DataFrame.from_dict(dicts)

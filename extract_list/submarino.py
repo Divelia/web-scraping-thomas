@@ -147,7 +147,7 @@ driver.close()
 
 dicts = {}
 
-dicts["title"] = titles
+dicts["name"] = titles
 dicts["price"] = prices
 dicts["oldprice"] = oldprices
 dicts["image"] = images

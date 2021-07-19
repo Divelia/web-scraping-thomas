@@ -1,4 +1,3 @@
-# from time import time
 import re
 import random
 import requests
@@ -23,17 +22,21 @@ response = requests.get(url_origin, headers=headers)
 
 parser = html.fromstring(response.text)
 
-soup = BeautifulSoup(response.text)
-
+sleep(random.uniform(5, 7))
 
 total = parser.xpath(
-    '//div[@class="sg-col-14-of-20 sg-col s-breadcrumb sg-col-10-of-16 sg-col-6-of-12"]//span/text()'
-)[0].replace(",", "")
+    '//div[@class="sg-col-14-of-20 sg-col s-breadcrumb sg-col-10-of-16 sg-col-6-of-12"]//span[1]/text()'
+)
 
-total_of_products = get_list_of_numbers(total)[-1]
-bypage = -get_list_of_numbers(total)[-2]
+print('total: ', total)
 
-print("total of poroducts: ", total_of_products)
+total_of_products = get_list_of_numbers(total[0].replace(",", ""))[-1]
+
+print(total_of_products)
+
+bypage = get_list_of_numbers(total[0].replace(",", ""))[-2]
+
+print("total of products: ", total_of_products)
 
 TOTAL_PAGES = math.ceil(total_of_products / bypage)
 
@@ -67,7 +70,7 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
     print("Start page number {}".format(PAGINACION_DESDE))
 
     # randomize requests
-    sleep(random.uniform(1.0, 3.0))
+    sleep(random.uniform(5, 7))
 
     try:
         current_url = set_link(PAGINACION_DESDE)
