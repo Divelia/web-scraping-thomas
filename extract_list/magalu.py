@@ -48,8 +48,8 @@ def set_link(n):
     return link_pattern
 
 
-PAGINACION_DESDE = int(input("Extraer datos desde pagina: "))
-PAGINACION_HASTA = int(input("Extraer datos hasta pagina: "))
+# PAGINACION_DESDE = int(input("Extraer datos desde pagina: "))
+# PAGINACION_HASTA = int(input("Extraer datos hasta pagina: "))
 
 n = 0
 
@@ -79,9 +79,9 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
                 current_url,
                 headers=headers,
                 proxies={
-                    "http": "http://" + str(current_proxy),
+                    # "http": "http://" + str(current_proxy),
                     "https": "https://" + str(current_proxy),
-                    "ftp": "ftp://" + str(current_proxy),
+                    # "ftp": "ftp://" + str(current_proxy),
                 },
             )
         else:
@@ -157,8 +157,8 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
             print("Scraper finished")
             break
 
-        print("PAGINACION_DESDE: ", PAGINACION_DESDE, " ", int(PAGINACION_DESDE))
-        print("PAGINACION_HASTA: ", PAGINACION_HASTA, " ", int(PAGINACION_HASTA))
+        # print("PAGINACION_DESDE: ", PAGINACION_DESDE, " ", int(PAGINACION_DESDE))
+        # print("PAGINACION_HASTA: ", PAGINACION_HASTA, " ", int(PAGINACION_HASTA))
 
     except Exception as e:
         print(e)

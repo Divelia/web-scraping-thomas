@@ -68,6 +68,7 @@ oldprices = []
 images = []
 brands = []
 promos = []
+hyperlinks = []
 
 tries = 0
 
@@ -121,12 +122,19 @@ while PAGINA_FIN >= PAGINA_INICIO:
                 except:
                     promo = ''
 
+                try:
+                    hyperlink = product.find_element_by_xpath(
+                        './/a[@class="nav-link_navLink__2oJ29 product_image__LcsAj"]').get_attribute('href')
+                except:
+                    hyperlink = ''
+
                 titles.append(title)
                 prices.append(price)
                 oldprices.append(oldprice)
                 images.append(image)
                 brands.append(brand)
                 promos.append(promo)
+                hyperlinks.append(hyperlink)
 
                 print(
                     "Item: ",
@@ -136,7 +144,8 @@ while PAGINA_FIN >= PAGINA_INICIO:
                         "oldprice": oldprice,
                         "image": image,
                         "brand": brand,
-                        "promo": promo
+                        "promo": promo,
+                        "hyperlink": hyperlink
                     },
                 )
 
@@ -147,7 +156,7 @@ while PAGINA_FIN >= PAGINA_INICIO:
             tries += 1
             continue
         else:
-            print(driver.current_url)
+            print('break in page: ', driver.current_url)
             break
 
     PAGINA_INICIO += 1
@@ -162,6 +171,7 @@ dicts["oldprice"] = oldprices
 dicts["image"] = images
 dicts["brand"] = brands
 dicts["promo"] = promos
+dicts["hyperlink"] = hyperlinks
 
 df_web = pd.DataFrame.from_dict(dicts)
 

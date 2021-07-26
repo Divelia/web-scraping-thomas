@@ -11,6 +11,7 @@ from tqdm import tqdm
 import random
 import pandas as pd
 from utils import *
+import random
 
 list_agents = [
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36",
@@ -39,6 +40,7 @@ driver.get(url_origin)
 titles = []
 prices = []
 images = []
+hyperlinks = []
 
 tries = 0
 
@@ -47,6 +49,8 @@ while True:
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, '//div[@class="loja_prod_founded"]/div'))
         )
+
+        sleep(random.uniform(5.0, 10.0))
 
         list_of_products = driver.find_elements(By.XPATH, '//div[@class="loja_prod_founded"]/div')
 
@@ -61,13 +65,19 @@ while True:
                 except:
                     price = ''
                 try:
-                    image = product.find_element_by_xpath('.//a[@class="img"]').get_attribute("outerHTML")
+                    image = "https://magazinenatural.com.br" + product.find_element_by_xpath('.//a[@class="img"]').get_attribute("img_first")
                 except:
                     image = ''
+                
+                try:
+                    hyperlink = product.find_element_by_xpath('.//a[@class="img"]').get_attribute("href")
+                except:
+                    hyperlink = ''
 
                 titles.append(title)
                 prices.append(price)
                 images.append(image)
+                hyperlinks.append(hyperlink)
 
                 print(
                     "Item: ",
@@ -75,6 +85,7 @@ while True:
                         "title": title,
                         "price": price,
                         "image": image,
+                        "hyperlink": hyperlink
                     },
                 )
 
@@ -104,6 +115,7 @@ dicts = {}
 dicts["name"] = titles
 dicts["price"] = prices
 dicts["image"] = images
+dicts["hyperlink"] = hyperlinks
 
 df_web = pd.DataFrame.from_dict(dicts)
 

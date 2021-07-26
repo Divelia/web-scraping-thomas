@@ -6,9 +6,13 @@ import re
 import random
 import pandas as pd
 
+search = pd.read_excel('master_table.xlsx', sheet_name="search")
+search_list = search.search.unique().tolist()
+
 def choose_search():
     print('(1) Vitaminas')
     print('(2) Suplementos')
+    print('(3) list of keywords')
     error = True
     while error:
         try:
@@ -19,8 +23,11 @@ def choose_search():
             if search_input == 2:
                 error = False
                 return 'suplementos'
+            if search_input == 3:
+                error = False
+                return search_list
         except:
-            raise Exception('You should choose between (1) and (2)')
+            raise Exception('You should choose between 1, 2, 3')
 
 def generate_free_proxy():
     proxies_list = pd.read_csv('list_ips.txt')

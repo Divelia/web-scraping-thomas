@@ -63,6 +63,7 @@ brands = []
 prices = []
 oldprices = []
 images = []
+hyperlinks = []
 
 error = False
 
@@ -87,9 +88,9 @@ while True:
                     current_url,
                     headers=headers,
                     proxies={
-                        "http": "http://" + str(current_proxy),
+                        # "http": "http://" + str(current_proxy),
                         "https": "https://" + str(current_proxy),
-                        "ftp": "ftp://" + str(current_proxy),
+                        # "ftp": "ftp://" + str(current_proxy),
                     },
                     verify=False,
                 )
@@ -140,11 +141,18 @@ while True:
                 print(e)
                 image = ""
 
+            try:
+                hyperlink = 'https://supernaturista.com' + product.xpath('.//a[@class="productitem--image-link"]/@href')[0]
+            except Exception as e:
+                print(e)
+                hyperlink = ""
+
             titles.append(title)
             prices.append(price)
             brands.append(brand)
             oldprices.append(oldprice)
             images.append(image)
+            hyperlinks.append(hyperlink)
 
             print(
                 "Item: ",
@@ -153,7 +161,8 @@ while True:
                     "price": price,
                     "oldprice": oldprice,
                     "image": image,
-                    "brand": brand
+                    "brand": brand,
+                    "hyperlink": hyperlink
                 },
             )
 
@@ -188,6 +197,7 @@ dicts["price"] = prices
 dicts["brand"] = brands
 dicts["oldprice"] = oldprices
 dicts["image"] = images
+dicts["hyperlink"] = hyperlinks
 
 df_web = pd.DataFrame.from_dict(dicts)
 print(df_web)

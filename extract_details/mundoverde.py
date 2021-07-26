@@ -87,6 +87,7 @@ prices = []
 oldprices = []
 categories = []
 images = []
+hyperlinks = []
 
 for p in total_links:
     driver.get(p)
@@ -130,6 +131,7 @@ for p in total_links:
         prices.append(price)
         categories.append(category)
         images.append(image)
+        hyperlinks.append(p)
 
         print(
             "Item: ",
@@ -140,6 +142,7 @@ for p in total_links:
                 "oldprice": oldprice,
                 "categories": category,
                 "image": image,
+                "hyperlink": p
             },
         )
 
@@ -157,6 +160,7 @@ dicts["price"] = prices
 dicts["oldprice"] = oldprices
 dicts["category"] = categories
 dicts["image"] = images
+dicts["hyperlink"] = hyperlinks
 
 df_web = pd.DataFrame.from_dict(dicts)
 
@@ -174,6 +178,3 @@ if df_previous.empty:
 else: 
     df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
     df_all_rows.to_excel("outputs//mundoverde.xlsx", index=False)
-
-print("total of links collected: ", total_links)
-print("total of links collected: ", len(total_links))

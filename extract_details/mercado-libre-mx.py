@@ -137,7 +137,7 @@ while PAGINACION_HASTA >= PAGINACION_DESDE:
             driver.get(link)
 
             title = (
-                driver.find_element(By.XPATH, '//h1[@class="ui-pdp-title"]')
+                driver.find_element(By.XPATH, '//h2[@class="ui-search-item__title ui-search-item__group__element"]')
                 .text.replace("\n", "")
                 .replace("\t", "")
             )

@@ -31,9 +31,14 @@ driver = webdriver.Chrome('./chromedriver', chrome_options=opts)
 
 
 # URL origin
-url_origin = "https://www.submarino.com.br/busca/{0}?content={1}&filter=%7B%22id%22%3A%22categoria%22%2C%22value%22%3A%22Suplementos+e+{2}%22%2C%22fixed%22%3Afalse%7D&sortBy=relevance&source=nanook&testab=searchTestAB%3Dold&rc={1}".format(search, search.upper(), search.capitalize())
+# url_origin = "https://www.submarino.com.br/busca/{0}?content={1}&filter=%7B%22id%22%3A%22categoria%22%2C%22value%22%3A%22Suplementos+e+{2}%22%2C%22fixed%22%3Afalse%7D&sortBy=relevance&source=nanook&testab=searchTestAB%3Dold&rc={1}".format(search, search.upper(), search.capitalize())
+def set_link(n):
+    if n == 1:
+        return "https://www.submarino.com.br/busca/{}".format(search)
+    else:
+        return "https://www.submarino.com.br/busca/{0}?content={1}&filter=%7B%22id%22%3A%22categoria%22%2C%22value%22%3A%22Suplementos%20e%20Vitaminas%22%2C%22fixed%22%3Afalse%7D&sortBy=relevance&source=nanook&testab=searchTestAB%3Dold&rc=VITAMINAS&limit=24&offset={2}".format(search, search.upper(), 24*(n-1))
 
-driver.get(url_origin)
+driver.get(set_link(1))
 
 total_products_string = driver.find_elements(
     By.XPATH,
@@ -64,13 +69,48 @@ stocks = []
 
 tries = 0
 
+PAGINA_INICIO = int(input("Extraer datos desde pagina: "))
+# PAGINA_FIN = int(input("Extraer datos hasta pagina: "))
+
+m = 0
+n = 0
 while True:
     try:
+
+        n += 1
+
+        if total_of_pages < n:
+            break
+
+        while PAGINA_INICIO > m + 1:
+            # soup = BeautifulSoup(driver.page_source, 'html.parser')
+            # try:
+            # next_page = soup.find('ul', 'a-pagination').find('li', 'a-last').find('a').get('href')
+            # except:
+            # next_page = soup.find('a', 's-pagination-item s-pagination-next s-pagination-button s-pagination-separator').get('href')
+
+            # url = "https://www.amazon.com.br" + next_page
+            # driver.get(url)
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, '//ul[contains(@class, "src__Items-sc-3s0b0c-1")]/li[last()]/button'))
+            )
+
+            button = WebDriverWait(driver, 20).until(
+                EC.element_to_be_clickable((By.XPATH, '//ul[contains(@class, "src__Items-sc-3s0b0c-1")]/li[last()]/button'))
+            )
+
+            driver.execute_script("arguments[0].click();", button)
+
+            m += 1
+
+
+
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, '//div[contains(@class, "grid__StyledGrid-sc-1man2hx-0 iFeuoP")]/div//span[@class="src__Text-sc-154pg0p-0 src__Name-r60f4z-1 keKVYT"]'))
         )
 
         list_of_products = driver.find_elements(By.XPATH, '//div[contains(@class, "grid__StyledGrid-sc-1man2hx-0 iFeuoP")]/div')
+
 
         for product in list_of_products:
             try:
@@ -121,20 +161,50 @@ while True:
 
             except Exception as e:
                 print(e)
+
+        dicts = {}
+
+        dicts["name"] = titles
+        dicts["price"] = prices
+        dicts["oldprice"] = oldprices
+        dicts["image"] = images
+        dicts["promo"] = promos
+        dicts["stock"] = stocks
+
+        df_web = pd.DataFrame.from_dict(dicts)
+
         try:
-            sleep(random.uniform(1.0, 5.0))
-
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, '//ul[@class="src__Items-sc-3s0b0c-1 bJyqHy"]/li[9]//button[@class="src__PageButton-sc-3s0b0c-2 emvgpX"]'))
-            )
-
-            button = WebDriverWait(driver, 20).until(
-                EC.element_to_be_clickable((By.XPATH, '//ul[@class="src__Items-sc-3s0b0c-1 bJyqHy"]/li[9]//button[@class="src__PageButton-sc-3s0b0c-2 emvgpX"]'))
-            )
-
-            driver.execute_script("arguments[0].click();", button)
+            df_previous = pd.read_excel("outputs//submarino-{}.xlsx".format(search))
+            print(df_previous)
         except:
-            break
+            df_previous = pd.DataFrame()
+            pass
+
+        print("is empty: ", df_previous.empty)
+
+        if df_previous.empty:
+            df_web.to_excel("outputs//submarino-{}.xlsx".format(search), index=False)
+        else:
+            df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
+            df_all_rows.to_excel("outputs//submarino-{}.xlsx".format(search), index=False)
+
+        # try:
+        #     sleep(random.uniform(1.0, 5.0))
+
+        #     WebDriverWait(driver, 10).until(
+        #         EC.presence_of_element_located((By.XPATH, '//ul[@class="src__Items-sc-3s0b0c-1 bJyqHy"]/li[9]//button[@class="src__PageButton-sc-3s0b0c-2 emvgpX"]'))
+        #     )
+
+        #     button = WebDriverWait(driver, 20).until(
+        #         EC.element_to_be_clickable((By.XPATH, '//ul[@class="src__Items-sc-3s0b0c-1 bJyqHy"]/li[9]//button[@class="src__PageButton-sc-3s0b0c-2 emvgpX"]'))
+        #     )
+
+        #     driver.execute_script("arguments[0].click();", button)
+        # except:
+        #     break
+
+        PAGINA_INICIO += 1
+
     except Exception as e:
         if tries < 5:
             tries += 1
@@ -145,29 +215,4 @@ while True:
 
 driver.close()
 
-dicts = {}
-
-dicts["name"] = titles
-dicts["price"] = prices
-dicts["oldprice"] = oldprices
-dicts["image"] = images
-dicts["promo"] = promos
-dicts["stock"] = stocks
-
-df_web = pd.DataFrame.from_dict(dicts)
-
-try:
-    df_previous = pd.read_excel("outputs//submarino-{}.xlsx".format(search))
-    print(df_previous)
-except:
-    df_previous = pd.DataFrame()
-    pass
-
-print("is empty: ", df_previous.empty)
-
-if df_previous.empty:
-    df_web.to_excel("outputs//submarino-{}.xlsx".format(search), index=False)
-else:
-    df_all_rows = pd.concat([df_previous, df_web], ignore_index=True)
-    df_all_rows.to_excel("outputs//submarino-{}.xlsx".format(search), index=False)
 

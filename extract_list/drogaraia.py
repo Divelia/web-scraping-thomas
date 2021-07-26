@@ -62,7 +62,7 @@ def set_url(n):
         if search == 'vitaminas':
             link_pattern = url_origin + "?p={}".format(n)
         else:
-            link_pattern = "https://busca.drogaraia.com.br/search?p=Q&srid=S1-4SEA-AWSP&lbc=dr&ts=custom-dr&w=SUPLEMENTOS&uid=939723673&method=and&isort=score&view=grid&srt={}".format(24+24*(t-2))
+            link_pattern = "https://busca.drogaraia.com.br/search?p=Q&srid=S1-4SEA-AWSP&lbc=dr&ts=custom-dr&w=SUPLEMENTOS&uid=939723673&method=and&isort=score&view=grid&srt={}".format(24+24*(n-2))
     return link_pattern
 
 
@@ -180,10 +180,13 @@ while PAGINA_FIN >= PAGINA_INICIO:
             driver.back()
 
     if search == 'suplementos':
-        next = driver.find_elements_by_xpath(
-            './/a[@class="next i-next btn-more sli_next_page"]'
-        )
-        next[0].click()
+        try:
+            next = driver.find_elements_by_xpath(
+                './/a[@class="next i-next btn-more sli_next_page"]'
+            )
+            next[0].click()
+        except:
+            break
 
     PAGINA_INICIO += 1
 
